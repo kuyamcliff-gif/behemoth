@@ -39,6 +39,10 @@ Do not hand-model programmer art. Source real, licensed, interactive pieces:
 - Tweak materials, lighting, and colors to the brand. Wire real interactivity: cursor-follow, drag-to-rotate, scroll-linked animation states.
 - Always ship a static fallback for low-power devices and honor prefers-reduced-motion.
 
+## Component foundation (the skeleton, not the design)
+
+For React/Next.js builds, start structural components (dialogs, forms, dropdowns, tables) from shadcn/ui: it copies real source into the project instead of installing an opaque package, so every component is owned code that can be themed and rewritten, not a black box fighting the brand direction. This solves accessibility and keyboard-navigation plumbing for free; it does not solve the design. A shadcn skeleton restyled with the palette, type, and one signature layout move from this file reads as custom; an unstyled shadcn skeleton reads exactly like every other AI-built app this year, which is itself now a tell. The same rule applies to any other component foundation (a design system the user already has, a component library from their existing codebase): use it for structure and correctness, then do the actual design work in this file on top of it.
+
 ## Assets
 
 - Brand/social icons: Simple Icons (simpleicons.org) or the platform's official brand kit. Never redraw the TikTok or Google logo by hand; brand guidelines forbid altered marks anyway.

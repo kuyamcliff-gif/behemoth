@@ -27,7 +27,7 @@ End with the playback: a plain-English description of the entire product as you 
 
 Goal: the right stack for this project's real scale target, explained so the user could repeat the reasoning to a friend.
 
-1. Read references/scale.md.
+1. Read references/scale.md. If mobile is in scope per Phase 1, also read references/mobile.md and decide the stack (cross-platform vs native vs PWA) here, not mid-build.
 2. Choose: framework, database (SQL vs NoSQL based on the data shape), auth provider, file storage, caching layer, hosting, CDN, payment provider, email/SMS provider. For each: one plain sentence of why, and roughly what it costs at their expected scale.
 3. Prefer what the user already has. If Supabase is connected, use it. If they mentioned a Hetzner VPS, deploy there. Introducing a new paid service requires telling the user its cost and getting a yes.
 4. Offer options where real choice exists (for example email verification: Resend vs Supabase built-in vs SES) with a one-line tradeoff each. Let the user pick.
@@ -43,15 +43,16 @@ Goal: the right stack for this project's real scale target, explained so the use
    - context.md: living map of the project. For every significant file: path, one-line purpose. Plus: current state, decisions made, gotchas discovered. Update after every work session.
    - tasks.md: the full feature checklist derived from plan.md, ordered by build sequence. Mark items as todo / in progress / done / verified.
 5. Set up environment variable files with named placeholders and a comment on where each value comes from.
-6. First commit: "scaffold: project structure, plan, and task list".
+6. Set up the CI pipeline (GitHub Actions or the platform's equivalent): lint, tests, and a dependency/secret scan run on every push (see testing.md and security.md). This is one config file now; it is expensive to retrofit later.
+7. First commit: "scaffold: project structure, plan, and task list".
 
 ## Phase 4: core build
 
 The loop, per feature:
 1. Mark the task in progress in tasks.md.
 2. Build the feature completely, including its state-aware behavior (visitor vs signed-in vs admin) and its error states and empty states. A page is not done if it only handles the happy path.
-3. Write or update its content per references/humanize.md.
-4. Test it: run it, click through it (or simulate the request flow), check the edge cases.
+3. Write or update its content per references/humanize.md. If discoverability matters for this page (per references/seo.md), set its meta tags, structured data, and heading hierarchy now, while building it, not in a separate SEO pass later.
+4. Test it: run it, click through it (or simulate the request flow), check the edge cases. Add the automated test the feature's tier requires per references/testing.md (unit test for any money/permission/limit logic, at minimum) so the CI gate actually protects it going forward.
 5. Grep the changed files for the em dash and en dash characters. Remove any found.
 6. Update context.md (what was added, where it lives).
 7. Commit with a message a human would write: "add checkout flow with MoMo and card options".
@@ -63,12 +64,13 @@ If a feature turns out to need something not in plan.md, stop and ask. Do not si
 
 ## Phase 5: security audit
 
-Run every item in references/security.md against the whole codebase. Fix findings immediately; they do not go in a report for later. Then commit: "security: audit pass, fixes applied". Summarize for the user in plain terms what was found and fixed.
+Start with the two-minute threat model in references/security.md: name this product's real attack surface before running the checklist. Then run every item in references/security.md against the whole codebase, including the software supply chain section (dependency and secret scanning wired into CI, not just a one-time audit). Fix findings immediately; they do not go in a report for later. Then commit: "security: audit pass, fixes applied". Summarize for the user in plain terms what was found and fixed.
 
 ## Phase 6: scale and load check
 
 1. Verify per references/scale.md: caching active, indexes on queried columns, assets on CDN, images optimized, no N+1 query patterns, rate limiting on auth and expensive endpoints.
-2. Run a basic load simulation if tooling allows (a loop of concurrent requests against key endpoints locally is acceptable evidence; say what was and was not tested).
+2. Run the load and lightweight security testing from references/testing.md: a loop of concurrent requests against key endpoints (say what was and was not tested), plus an automated baseline scan (OWASP ZAP or similar) against staging if available.
+2b. If discoverability matters, verify the references/seo.md checklist against the deployed site: sitemap.xml reachable, robots.txt correct, structured data validates, Core Web Vitals actually measured (not assumed) on the live URL.
 3. Write the honest scale statement into HANDOFF.md later: "This setup comfortably handles roughly X concurrent users. The first thing to struggle will be Y. When you see Z symptom, upgrade W. Approximate cost of that upgrade: ...". Never imply infinite scale.
 
 ## Phase 7: deployment
@@ -76,25 +78,28 @@ Run every item in references/security.md against the whole codebase. Fix finding
 1. Deploy to the chosen platform. Set every environment variable. Wire the domain. Confirm SSL.
 2. Hit the live URL. Run through the critical flows in production: signup, signin, the core action, payment in test mode, admin access.
 3. If the user provided test credentials for third-party services, use them to verify integrations end to end. If not, list exactly which flows remain unverified and how the user can verify them in five minutes.
-4. Commit and tag: "v1.0.0".
+4. For a mobile build, this phase is store submission, not just a deploy command: run the full references/mobile.md pre-submission checklist, submit to TestFlight/closed testing first, then production. Set expectations honestly on review time, it is Apple's and Google's clock, not something to promise a date against.
+5. Commit and tag: "v1.0.0".
 
 ## Phase 8: handoff package
 
-Write HANDOFF.md covering, in plain English:
+Follow references/operations.md for the monitoring, incident-response, backup, and dependency-freshness content. Write HANDOFF.md covering, in plain English:
 - What was built, page by page, in two lines each.
 - Every external service: what it does, where its dashboard is, what it costs, which env var holds its key.
 - Credentials hygiene: which values must never be shared or committed.
 - How to make simple changes themselves (edit this file for the homepage text, run this command to deploy).
 - How to roll back: every feature has a git checkpoint; the command to return to any of them.
 - The scale statement from Phase 6.
+- Monitoring, incident response, and backup restore confirmation per references/operations.md, including the honest recovery expectation (RPO/RTO in plain terms).
 - Where the legal pages are and the one thing they must update (their real contact address and jurisdiction).
 
 ## Phase 9: maintenance guidance
 
-Tell the user, briefly:
+Tell the user, briefly, per references/operations.md:
 - The three numbers to glance at weekly (error rate, response time, database size) and where to see them.
 - What the first real bug report will probably look like and how to hand it to Claude efficiently (paste the error, name the page, mention what the user was doing).
 - The upgrade triggers from the scale statement.
+- That dependency-update PRs (Dependabot/Renovate) will show up periodically and need a human glance and merge.
 
 ## Existing projects: the review flow
 

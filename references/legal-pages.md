@@ -34,7 +34,7 @@ Behemoth is not a law firm and must say so: include a line in HANDOFF.md advisin
 1. Who the data controller is (real name, real contact).
 2. Exactly what is collected, listed concretely: account email, order history, uploaded images, payment metadata (noting card numbers are held by the payment provider, not the product), IP and device data if logged, cookies used.
 3. Why each category is collected (purpose limitation).
-4. Third parties who receive data, by name: the actual hosting provider, payment provider, email provider, analytics tool. Link their policies.
+4. Third parties who receive data, by name: the actual hosting provider, payment provider, email provider, analytics tool. Link their policies. Keep this list current as a living subprocessor list; update it in the same commit that adds or removes a service.
 5. Retention: how long, and what deletion does.
 6. User rights for the applicable regimes (access, correction, deletion, export, objection) and the concrete way to exercise them (the settings page or the contact email).
 7. Cookies: what is set, what is essential vs optional, and the consent mechanism if optional cookies exist for EU visitors.
@@ -45,6 +45,10 @@ Behemoth is not a law firm and must say so: include a line in HANDOFF.md advisin
 ## Refund policy (if the product sells)
 
 State the chosen posture from interview Batch D plainly, with the legally required minimums for the jurisdiction (searched, not assumed), the process to request, and the timeline to receive.
+
+## Accessibility and disclosure
+
+WCAG 2.1 AA (see design-rules.md) is a legal requirement in several markets, not a nice-to-have: the ADA in the US has been used in thousands of website lawsuits, and the EU's European Accessibility Act applies from 2025 to many digital products serving EU consumers. For any product with a real user base, mention this plainly to the user rather than treating accessibility as purely a design preference. A `security.txt` file (see security.md) for responsible vulnerability disclosure sits alongside the legal pages, same footer, same seriousness.
 
 ## Placement
 
