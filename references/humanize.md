@@ -2,6 +2,10 @@
 
 This governs all user-facing text: page copy, headings, buttons, emails, error messages, the product's AI agent replies, docs, READMEs, marketing. Based on Wikipedia's "Signs of AI writing" (WikiProject AI Cleanup) plus voice rules.
 
+## Why these patterns exist (so the rules can be applied, not just memorized)
+
+Default LLM output favors the statistically safest next word and a narrow band of sentence lengths, because that is what training rewards. Two concrete mechanisms produce the "AI voice" every reader now half-recognizes: low lexical surprise (reaching for the expected word, "delve" instead of a plainer or more specific one) and low burstiness (sentences that cluster around the same length instead of the short-then-long rhythm real writers fall into naturally). Every pattern in this file is a symptom of one of those two mechanisms. Fixing them is not about tricking a detector, it is what actually makes text sound like it has a person behind it: pick the specific word over the safe one, and let sentence length vary the way a real paragraph does. Read a finished piece back and check both: does any sentence use the "expected" word where a more specific one exists, and do three sentences in a row have roughly the same length. Fix either failure the same way: get specific, break the rhythm.
+
 ## The process for any piece of text
 
 1. Write it in the brand voice chosen in the interview, grounded in how real products in this niche talk.

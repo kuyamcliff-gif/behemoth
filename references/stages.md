@@ -27,7 +27,7 @@ End with the playback: a plain-English description of the entire product as you 
 
 Goal: the right stack for this project's real scale target, explained so the user could repeat the reasoning to a friend.
 
-1. Read references/scale.md.
+1. Read references/scale.md. If mobile is in scope per Phase 1, also read references/mobile.md and decide the stack (cross-platform vs native vs PWA) here, not mid-build.
 2. Choose: framework, database (SQL vs NoSQL based on the data shape), auth provider, file storage, caching layer, hosting, CDN, payment provider, email/SMS provider. For each: one plain sentence of why, and roughly what it costs at their expected scale.
 3. Prefer what the user already has. If Supabase is connected, use it. If they mentioned a Hetzner VPS, deploy there. Introducing a new paid service requires telling the user its cost and getting a yes.
 4. Offer options where real choice exists (for example email verification: Resend vs Supabase built-in vs SES) with a one-line tradeoff each. Let the user pick.
@@ -51,7 +51,7 @@ Goal: the right stack for this project's real scale target, explained so the use
 The loop, per feature:
 1. Mark the task in progress in tasks.md.
 2. Build the feature completely, including its state-aware behavior (visitor vs signed-in vs admin) and its error states and empty states. A page is not done if it only handles the happy path.
-3. Write or update its content per references/humanize.md.
+3. Write or update its content per references/humanize.md. If discoverability matters for this page (per references/seo.md), set its meta tags, structured data, and heading hierarchy now, while building it, not in a separate SEO pass later.
 4. Test it: run it, click through it (or simulate the request flow), check the edge cases. Add the automated test the feature's tier requires per references/testing.md (unit test for any money/permission/limit logic, at minimum) so the CI gate actually protects it going forward.
 5. Grep the changed files for the em dash and en dash characters. Remove any found.
 6. Update context.md (what was added, where it lives).
@@ -70,6 +70,7 @@ Start with the two-minute threat model in references/security.md: name this prod
 
 1. Verify per references/scale.md: caching active, indexes on queried columns, assets on CDN, images optimized, no N+1 query patterns, rate limiting on auth and expensive endpoints.
 2. Run the load and lightweight security testing from references/testing.md: a loop of concurrent requests against key endpoints (say what was and was not tested), plus an automated baseline scan (OWASP ZAP or similar) against staging if available.
+2b. If discoverability matters, verify the references/seo.md checklist against the deployed site: sitemap.xml reachable, robots.txt correct, structured data validates, Core Web Vitals actually measured (not assumed) on the live URL.
 3. Write the honest scale statement into HANDOFF.md later: "This setup comfortably handles roughly X concurrent users. The first thing to struggle will be Y. When you see Z symptom, upgrade W. Approximate cost of that upgrade: ...". Never imply infinite scale.
 
 ## Phase 7: deployment
@@ -77,7 +78,8 @@ Start with the two-minute threat model in references/security.md: name this prod
 1. Deploy to the chosen platform. Set every environment variable. Wire the domain. Confirm SSL.
 2. Hit the live URL. Run through the critical flows in production: signup, signin, the core action, payment in test mode, admin access.
 3. If the user provided test credentials for third-party services, use them to verify integrations end to end. If not, list exactly which flows remain unverified and how the user can verify them in five minutes.
-4. Commit and tag: "v1.0.0".
+4. For a mobile build, this phase is store submission, not just a deploy command: run the full references/mobile.md pre-submission checklist, submit to TestFlight/closed testing first, then production. Set expectations honestly on review time, it is Apple's and Google's clock, not something to promise a date against.
+5. Commit and tag: "v1.0.0".
 
 ## Phase 8: handoff package
 

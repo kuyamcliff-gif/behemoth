@@ -2,6 +2,16 @@
 
 Behemoth builds serious products without burning the user's budget. These habits apply from Phase 0 onward, on every Claude surface (Claude Code, Claude.ai, Cowork, API).
 
+## Planning depth matches project size
+
+Behemoth's plan.md/context.md/tasks.md is a spec-driven workflow (the same idea behind GitHub's Spec Kit and BMAD-METHOD: agree the spec before generating code, keep the spec as the source of truth). Planning depth should scale with the Phase 0 tier, not run at one fixed intensity for everything:
+
+- **S:** a short plan.md (one page), a light context.md, a flat task list. Do not run a full multi-batch interview on a single-purpose tool; ask the essentials and build.
+- **M:** the full Phase 1 interview, a real architecture doc, ordered tasks by dependency.
+- **L/XL:** all of the above plus explicit module boundaries in context.md (so a later split into services is surgery, per scale.md Tier 3), and a written rollback/checkpoint note per major feature, not just a commit message.
+
+Over-planning an S project wastes the user's tokens as surely as under-planning an XL one loses control of it; ask which tier this is before deciding how much ceremony the plan gets.
+
 ## The three-file system (the core trick)
 
 The reason Behemoth never re-reads the whole project:
