@@ -1,0 +1,105 @@
+# The ten phases in full
+
+Follow these in order. Each phase ends with a checkpoint the user can see.
+
+## Phase 0: research and feasibility
+
+Goal: the user makes an informed go/no-go decision before anyone spends effort.
+
+1. Restate the idea in one sentence and confirm you understood it.
+2. Search the web for the top existing products doing the same or similar thing. Present the top 3: what each does well, what users complain about, what it costs. Cite sources.
+3. State the gap this project can fill, or say honestly that the space is crowded and why the user might still win (niche, region, price, community).
+4. Estimate build effort in three numbers: rough calendar time at normal pace, rough token cost range per model tier, and the number of distinct features. Use the method in token-economy.md. Search for current model pricing first.
+5. Ask one question: "Go all out (thorough code, full tests, rich docs) or manage tokens tightly (lean output, essentials only)?" Respect the answer for the whole project.
+6. Flag anything infeasible now (for example: "an iOS app cannot be published from this environment; I can build it fully but you will need a Mac plus an Apple developer account for the store step").
+
+## Phase 1: the full interview
+
+Goal: zero questions during the build. Everything is asked here, in organized batches.
+
+Use references/interview.md as the question bank. Batch questions by topic (identity, pages, users and state, money, safety, design, extras) so the user answers 5 to 8 related questions at a time, not 40 at once and not 1 every minute. If the interface has an option-picker tool, use it.
+
+Skip questions already answered by context (their earlier messages, their connected tools, their region). Never ask what you already know.
+
+End with the playback: a plain-English description of the entire product as you understood it, page by page, flow by flow, including what happens to rule-breakers, what the AI agent may and may not do, and what the design will feel like. The user must approve this playback before Phase 2. Save the approved playback into plan.md verbatim in Phase 3.
+
+## Phase 2: architecture
+
+Goal: the right stack for this project's real scale target, explained so the user could repeat the reasoning to a friend.
+
+1. Read references/scale.md.
+2. Choose: framework, database (SQL vs NoSQL based on the data shape), auth provider, file storage, caching layer, hosting, CDN, payment provider, email/SMS provider. For each: one plain sentence of why, and roughly what it costs at their expected scale.
+3. Prefer what the user already has. If Supabase is connected, use it. If they mentioned a Hetzner VPS, deploy there. Introducing a new paid service requires telling the user its cost and getting a yes.
+4. Offer options where real choice exists (for example email verification: Resend vs Supabase built-in vs SES) with a one-line tradeoff each. Let the user pick.
+5. Present the architecture as a short plain-English document. Get approval.
+
+## Phase 3: scaffolding
+
+1. Initialize git.
+2. Create the project structure for the chosen stack.
+3. Write .claudeignore excluding: node_modules, dist, build, .next, .nuxt, out, coverage, __pycache__, venv, *.lock (package-lock.json, yarn.lock, pnpm-lock.yaml), .env (never read secrets into context), large media directories.
+4. Create the three project files:
+   - plan.md: the approved playback from Phase 1 plus the approved architecture from Phase 2. This file changes only with explicit user approval.
+   - context.md: living map of the project. For every significant file: path, one-line purpose. Plus: current state, decisions made, gotchas discovered. Update after every work session.
+   - tasks.md: the full feature checklist derived from plan.md, ordered by build sequence. Mark items as todo / in progress / done / verified.
+5. Set up environment variable files with named placeholders and a comment on where each value comes from.
+6. First commit: "scaffold: project structure, plan, and task list".
+
+## Phase 4: core build
+
+The loop, per feature:
+1. Mark the task in progress in tasks.md.
+2. Build the feature completely, including its state-aware behavior (visitor vs signed-in vs admin) and its error states and empty states. A page is not done if it only handles the happy path.
+3. Write or update its content per references/humanize.md.
+4. Test it: run it, click through it (or simulate the request flow), check the edge cases.
+5. Grep the changed files for the em dash and en dash characters. Remove any found.
+6. Update context.md (what was added, where it lives).
+7. Commit with a message a human would write: "add checkout flow with MoMo and card options".
+8. Mark the task verified. Next feature.
+
+Build order rule: foundation before decoration. Auth and data models before pages that need them. Payments before the pages that sell. The AI agent last, once there is real product data for it to know.
+
+If a feature turns out to need something not in plan.md, stop and ask. Do not silently expand scope.
+
+## Phase 5: security audit
+
+Run every item in references/security.md against the whole codebase. Fix findings immediately; they do not go in a report for later. Then commit: "security: audit pass, fixes applied". Summarize for the user in plain terms what was found and fixed.
+
+## Phase 6: scale and load check
+
+1. Verify per references/scale.md: caching active, indexes on queried columns, assets on CDN, images optimized, no N+1 query patterns, rate limiting on auth and expensive endpoints.
+2. Run a basic load simulation if tooling allows (a loop of concurrent requests against key endpoints locally is acceptable evidence; say what was and was not tested).
+3. Write the honest scale statement into HANDOFF.md later: "This setup comfortably handles roughly X concurrent users. The first thing to struggle will be Y. When you see Z symptom, upgrade W. Approximate cost of that upgrade: ...". Never imply infinite scale.
+
+## Phase 7: deployment
+
+1. Deploy to the chosen platform. Set every environment variable. Wire the domain. Confirm SSL.
+2. Hit the live URL. Run through the critical flows in production: signup, signin, the core action, payment in test mode, admin access.
+3. If the user provided test credentials for third-party services, use them to verify integrations end to end. If not, list exactly which flows remain unverified and how the user can verify them in five minutes.
+4. Commit and tag: "v1.0.0".
+
+## Phase 8: handoff package
+
+Write HANDOFF.md covering, in plain English:
+- What was built, page by page, in two lines each.
+- Every external service: what it does, where its dashboard is, what it costs, which env var holds its key.
+- Credentials hygiene: which values must never be shared or committed.
+- How to make simple changes themselves (edit this file for the homepage text, run this command to deploy).
+- How to roll back: every feature has a git checkpoint; the command to return to any of them.
+- The scale statement from Phase 6.
+- Where the legal pages are and the one thing they must update (their real contact address and jurisdiction).
+
+## Phase 9: maintenance guidance
+
+Tell the user, briefly:
+- The three numbers to glance at weekly (error rate, response time, database size) and where to see them.
+- What the first real bug report will probably look like and how to hand it to Claude efficiently (paste the error, name the page, mention what the user was doing).
+- The upgrade triggers from the scale statement.
+
+## Existing projects: the review flow
+
+When reviewing rather than building:
+1. Map the project from its structure and README, reading individual files only as needed. Use a subagent for bulk reading if available.
+2. Audit in this order: security (worst first), broken or fragile flows, scale traps, missing legal pages, AI-slop design and writing, missing state-awareness.
+3. Present findings ranked by impact, each with: what is wrong, why it matters in plain terms, what fixing it involves, rough effort.
+4. Let the user choose. Then run the normal phase discipline on the chosen work: agree, build, verify, commit, document.
