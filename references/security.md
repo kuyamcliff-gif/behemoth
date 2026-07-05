@@ -2,6 +2,20 @@
 
 Roughly 40% of AI-generated code ships with vulnerabilities. Behemoth does not. Run this full list in Phase 5 and keep it in mind during Phase 4. Fix findings immediately.
 
+## Threat model first, two minutes, not optional
+
+Before running the checklist below, name this specific product's real attack surface out loud: what data would hurt someone if leaked (payment metadata, health info, private messages), who would want in (a competitor, a bored user, a bot farm scraping listings), and what they would gain (money, other users' data, free access). This turns the generic checklist into a targeted audit instead of a box-ticking exercise, and it decides which sections below matter most for this build.
+
+## Software supply chain (OWASP 2025 added this as its own top-3 category)
+
+Treat AI-generated code, including your own output, as an untrusted contribution that needs the same scrutiny as a third-party pull request, not a free pass because an assistant wrote it.
+
+- [ ] Automated dependency scanning wired into CI (Dependabot, Renovate, or Snyk), not just a one-time `npm audit` at the end. Vulnerable packages get flagged on every push, not discovered at the next audit.
+- [ ] Secret scanning with push protection enabled on the repo host (GitHub secret scanning, gitleaks in CI) so a leaked key is blocked before the commit lands, not found after.
+- [ ] Lockfiles committed and CI installs from the lockfile only (`npm ci`, not `npm install`), so builds are reproducible and a compromised registry cannot silently swap a dependency.
+- [ ] For anything going to production in a regulated niche (health, finance, government customers): generate a basic SBOM (CycloneDX or SPDX, most package managers have a one-command exporter) so the user can answer "what's in this" if ever asked.
+- [ ] No dependency added without checking it is maintained and reasonably popular; a single-maintainer package with no updates in years is a supply chain risk, not just a preference.
+
 ## Secrets and configuration
 
 - [ ] No API key, password, token, or connection string anywhere in the codebase, comments, or git history. All secrets in env vars. If a secret ever touched a commit, rotate it and scrub history.
@@ -16,6 +30,16 @@ Roughly 40% of AI-generated code ships with vulnerabilities. Behemoth does not. 
 - [ ] Session tokens httpOnly, secure, sameSite. Reasonable expiry. Logout actually invalidates.
 - [ ] Password reset tokens single-use and expiring. Reset flow does not reveal whether an email exists.
 - [ ] Email/phone verification actually gates the actions it is supposed to gate.
+- [ ] MFA/2FA offered (at minimum for admin and financial accounts); use the auth provider's built-in support rather than hand-rolling TOTP.
+- [ ] OAuth/social login flows use PKCE and validate the `state` parameter; never trust a redirect callback without it.
+- [ ] If hand-issuing tokens (JWT or similar): algorithm pinned server-side (reject `alg: none`, reject a client-supplied algorithm), signature always verified, short expiry with rotation, never used as the sole authorization check for a sensitive action without a server-side re-check.
+
+## Business logic and race conditions
+
+- [ ] Money and inventory changes happen inside a database transaction with proper locking; two simultaneous requests cannot both succeed at spending the same balance or claiming the last unit of stock.
+- [ ] Payment and webhook endpoints are idempotent (an idempotency key or a check against an already-processed order ID); a retried request or a double-click never double-charges or double-fulfills.
+- [ ] Coupon codes, referral bonuses, and free-tier limits are checked server-side against real usage history, not just a client-supplied flag.
+- [ ] Negative, zero, or absurdly large quantities and amounts are rejected before they reach payment or inventory logic.
 
 ## Authorization (the one AI code fails most)
 
@@ -39,6 +63,21 @@ Roughly 40% of AI-generated code ships with vulnerabilities. Behemoth does not. 
 - [ ] Webhooks verify signatures (Stripe, payment providers, etc.). Payment amounts verified server-side against the order, never trusted from the client.
 - [ ] Internal endpoints and cron/queue triggers require a secret or are network-isolated.
 - [ ] Security headers set: Content-Security-Policy (at least a basic one), X-Content-Type-Options, X-Frame-Options or frame-ancestors, Referrer-Policy.
+
+## Error handling (OWASP 2025 added this as its own category)
+
+- [ ] Unexpected exceptions fail closed: a crash or timeout in a permission check denies the action, it never silently grants it or falls through to a default-allow path.
+- [ ] Catch-all error handlers never swallow authorization or payment failures; they log and surface a safe error, they do not continue as if the check passed.
+- [ ] Third-party API failures (payment provider down, email provider timeout) are handled explicitly; the code path is decided on purpose, not left to whatever the language does when an unhandled exception hits.
+
+## Logging and alerting
+
+- [ ] Security-relevant events are logged with enough detail to investigate later: failed logins, permission denials, payment failures, admin actions. Never log passwords, tokens, or full card numbers.
+- [ ] Alerting is wired for spikes (login failure rate, 500 rate, payment decline rate), not just a dashboard nobody watches. Even a free-tier Sentry alert or an email on threshold breach counts.
+
+## Responsible disclosure
+
+- [ ] For any product handling user data or payments, add a `security.txt` file (RFC 9116, at `/.well-known/security.txt`) with a real contact for someone who finds a vulnerability to report it responsibly.
 
 ## Dependencies and platform
 
