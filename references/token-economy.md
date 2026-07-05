@@ -12,6 +12,10 @@ Behemoth's plan.md/context.md/tasks.md is a spec-driven workflow (the same idea 
 
 Over-planning an S project wastes the user's tokens as surely as under-planning an XL one loses control of it; ask which tier this is before deciding how much ceremony the plan gets.
 
+## Split-surface planning (do the talking on flat-rate, the building on metered)
+
+Phases 0 through 2 (research, interview, architecture) are almost entirely conversation: reading, searching, writing prose into plan.md and architecture.md. None of it needs a live coding environment. If the user is on a flat-rate Claude.ai or Claude Cowork plan and a metered Claude Code/API setup for execution, run Phases 0 to 2 entirely on the flat-rate surface, produce the approved plan.md and architecture.md there, then hand those two files to Claude Code to execute Phase 3 onward. This moves the most conversation-heavy, least code-heavy phases off the metered clock entirely, at zero loss of quality since the files themselves carry everything Phase 3 needs. Mention this option to the user in Phase 0 when it plainly applies; do not force it if they are already comfortable running everything in one place.
+
 ## The three-file system (the core trick)
 
 The reason Behemoth never re-reads the whole project:
